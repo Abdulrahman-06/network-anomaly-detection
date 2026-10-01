@@ -1,4 +1,6 @@
 import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report
 
 column_names = [
     "duration", "protocol_type", "service", "flag", "src_bytes", "dst_bytes",
@@ -18,7 +20,29 @@ dataframe = pd.get_dummies(dataframe, columns=["protocol_type", "service", "flag
 dataframe = dataframe.drop(columns=["difficulty_level"])
 dataframe["is_normal"] = (dataframe["class"] != "normal").astype(int)
 
+test_dataframe = pd.read_csv("KDDTest+.txt", header=None)
+test_dataframe.columns = column_names
+test_dataframe = pd.get_dummies(test_dataframe, columns=["protocol_type", "service", "flag"])
+test_dataframe = test_dataframe.drop(columns=["difficulty_level"])
+test_dataframe["is_normal"] = (test_dataframe["class"] != "normal").astype(int)
+
+y = dataframe["is_normal"]
+X = dataframe.drop(columns=["class", "is_normal"])
+
+y_test = test_dataframe["is_normal"]
+X_test = test_dataframe.drop(columns=["class", "is_normal"])
+X_test = X_test.reindex(columns=X.columns, fill_value=0)
+
+model = DecisionTreeClassifier()
+model.fit(X, y)
+print("Model trained")
+predictions = model.predict(X_test)
 
 print(dataframe.shape)
 print(dataframe.head())
 print(dataframe[["class", "is_normal"]].head(10))
+print(X.shape)
+print(y.shape)
+print(classification_report(y_test, predictions))
+
+
