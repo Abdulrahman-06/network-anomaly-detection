@@ -7,7 +7,7 @@ Can a model catch network attacks it has never seen before? On the NSL-KDD bench
 **Key findings**
 - **Supervised models only recognise what they were taught.** The best one (gradient boosting) catches 79% of attack types seen in training, but only 44% of unseen types.
 - **Anomaly detection holds up on new attacks.** Isolation Forest, which never sees a single attack during training, catches 62% of unseen attacks at a 2.2% false alarm rate, 42% more than the best supervised model.
-- **The best model depends on the false-alarm budget.** Below about 9% false alarms, Isolation Forest catches the most unseen attacks (at 2%, roughly 7× more than random forest). Above that, random forest with a tuned cutoff wins, reaching 95% of unseen attacks at a 13% false alarm rate.
+- **The best model depends on the false-alarm budget.** Below about 9% false alarms, Isolation Forest catches the most unseen attacks or ties for the most (at 2%, roughly 7× more than random forest). Above that, random forest with a tuned cutoff wins, reaching 95% of unseen attacks at a 13% false alarm rate.
 
 ## The problem
 
@@ -116,5 +116,3 @@ python -m pytest # runs the tests
 ```
 
 All models use fixed random seeds, so `nad all` reproduces the results exactly.
-
-
