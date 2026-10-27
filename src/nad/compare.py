@@ -6,7 +6,7 @@ from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.tree import DecisionTreeClassifier
 
 from .data import load_nsl_kdd, split_features_labels
-from .evaluate import recall_on_seen_and_unseen
+from .evaluate import false_alarm_rate, recall_on_seen_and_unseen
 from .train import DATA_DIR, PROJECT_ROOT, build_pipeline
 
 MODELS = {
@@ -26,6 +26,7 @@ def evaluate_on_test(pipeline, X_test, y_test, train_classes, test_classes):
         "test_precision": precision_score(y_test, predictions),
         "test_recall": recall_score(y_test, predictions),
         "test_f1": f1_score(y_test, predictions),
+        "test_false_alarm_rate": false_alarm_rate(y_test, predictions),
         "test_roc_auc": roc_auc_score(y_test, attack_scores),
         **recall_on_seen_and_unseen(train_classes, test_classes, predictions),
     }
