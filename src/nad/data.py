@@ -13,6 +13,16 @@ COLUMN_NAMES = [
     "dst_host_rerror_rate", "dst_host_srv_rerror_rate", "class", "difficulty_level"
 ]
 
+ATTACK_CATEGORIES = {
+    "dos": ["apache2", "back", "land", "mailbomb", "neptune", "pod", "processtable", "smurf", "teardrop", "udpstorm"],
+    "probe": ["ipsweep", "mscan", "nmap", "portsweep", "saint", "satan"],
+    "r2l": ["ftp_write", "guess_passwd", "imap", "multihop", "named", "phf", "sendmail", "snmpgetattack",
+            "snmpguess", "spy", "warezclient", "warezmaster", "worm", "xlock", "xsnoop"],
+    "u2r": ["buffer_overflow", "httptunnel", "loadmodule", "perl", "ps", "rootkit", "sqlattack", "xterm"],
+}
+
+CATEGORY_OF = {attack: category for category, attacks in ATTACK_CATEGORIES.items() for attack in attacks}
+
 
 def load_nsl_kdd(path):
     df = pd.read_csv(path, header=None, names=COLUMN_NAMES).drop(columns="difficulty_level")

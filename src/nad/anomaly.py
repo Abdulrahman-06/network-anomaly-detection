@@ -2,19 +2,19 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
-from sklearn.neural_network import MLPRegressor  
+from sklearn.neural_network import MLPRegressor
 
 from .compare import RESULTS_DIR
 from .data import load_nsl_kdd, split_features_labels
-from .evaluate import false_alarm_rate, recall_on_seen_and_unseen
-from .features import build_preprocessor  
+from .evaluate import false_alarm_rate, recall_by_category, recall_on_seen_and_unseen
+from .features import build_preprocessor
 from .train import DATA_DIR, build_pipeline
 
 FALSE_ALARM_RATE = 0.05
 
 
-def reconstruction_errors(autoencoder, X): 
-    return ((autoencoder.predict(X) - X) ** 2).mean(axis=1) 
+def reconstruction_errors(autoencoder, X):
+    return ((autoencoder.predict(X) - X) ** 2).mean(axis=1)
 
 
 def evaluate_detector(name, normal_scores, attack_scores, y_test, train_classes, test_classes):
@@ -28,6 +28,7 @@ def evaluate_detector(name, normal_scores, attack_scores, y_test, train_classes,
         "test_false_alarm_rate": false_alarm_rate(y_test, predictions),
         "test_roc_auc": roc_auc_score(y_test, attack_scores),
         **recall_on_seen_and_unseen(train_classes, test_classes, predictions),
+        **recall_by_category(test_classes, predictions),
     }
 
 
@@ -42,11 +43,11 @@ def main():
     isolation_forest = build_pipeline(IsolationForest(n_estimators=200, random_state=42))
     isolation_forest.fit(X_normal)
 
-    preprocessor = build_preprocessor().fit(X_normal)  
-    Z_normal = preprocessor.transform(X_normal) 
-    Z_test = preprocessor.transform(X_test) 
-    autoencoder = MLPRegressor(hidden_layer_sizes=(64, 16, 64), max_iter=50, early_stopping=True, random_state=42)  
-    autoencoder.fit(Z_normal, Z_normal)  
+    preprocessor = build_preprocessor().fit(X_normal)
+    Z_normal = preprocessor.transform(X_normal)
+    Z_test = preprocessor.transform(X_test)
+    autoencoder = MLPRegressor(hidden_layer_sizes=(64, 16, 64), max_iter=50, early_stopping=True, random_state=42)
+    autoencoder.fit(Z_normal, Z_normal)
 
     rows = [
         evaluate_detector(
@@ -55,7 +56,7 @@ def main():
             -isolation_forest.score_samples(X_test),
             y_test, train["class"], test["class"],
         ),
-        evaluate_detector(  
+        evaluate_detector(
             "autoencoder",
             reconstruction_errors(autoencoder, Z_normal),
             reconstruction_errors(autoencoder, Z_test),
