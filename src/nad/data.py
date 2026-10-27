@@ -18,3 +18,8 @@ def load_nsl_kdd(path):
     df = pd.read_csv(path, header=None, names=COLUMN_NAMES).drop(columns="difficulty_level")
     df["is_attack"] = (df["class"] != "normal").astype(int)
     return df
+
+
+def split_features_labels(df):
+    return df.drop(columns=["class", "is_attack"]), df["is_attack"]
+
