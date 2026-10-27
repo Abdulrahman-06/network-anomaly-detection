@@ -6,6 +6,7 @@ from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.tree import DecisionTreeClassifier
 
 from .data import load_nsl_kdd, split_features_labels
+from .evaluate import recall_on_seen_and_unseen
 from .train import DATA_DIR, PROJECT_ROOT, build_pipeline
 
 MODELS = {
@@ -18,7 +19,7 @@ MODELS = {
 RESULTS_DIR = PROJECT_ROOT / "results"
 
 
-def evaluate_on_test(pipeline, X_test, y_test):
+def evaluate_on_test(pipeline, X_test, y_test, train_classes, test_classes):
     predictions = pipeline.predict(X_test)
     attack_scores = pipeline.predict_proba(X_test)[:, 1]
     return {
@@ -26,12 +27,17 @@ def evaluate_on_test(pipeline, X_test, y_test):
         "test_recall": recall_score(y_test, predictions),
         "test_f1": f1_score(y_test, predictions),
         "test_roc_auc": roc_auc_score(y_test, attack_scores),
+        **recall_on_seen_and_unseen(train_classes, test_classes, predictions),
     }
 
 
+
 def main():
-    X_train, y_train = split_features_labels(load_nsl_kdd(DATA_DIR / "KDDTrain+.txt"))
-    X_test, y_test = split_features_labels(load_nsl_kdd(DATA_DIR / "KDDTest+.txt"))
+    train = load_nsl_kdd(DATA_DIR / "KDDTrain+.txt")
+    test = load_nsl_kdd(DATA_DIR / "KDDTest+.txt")
+    X_train, y_train = split_features_labels(train)
+    X_test, y_test = split_features_labels(test)
+
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
     rows = []
@@ -44,7 +50,8 @@ def main():
             "model": name,
             "cv_recall": cv_scores["test_recall"].mean(),
             "cv_f1": cv_scores["test_f1"].mean(),
-            **evaluate_on_test(pipeline, X_test, y_test),
+            **evaluate_on_test(pipeline, X_test, y_test, train["class"], test["class"]),
+
         })
 
     results = pd.DataFrame(rows).set_index("model").round(3)
